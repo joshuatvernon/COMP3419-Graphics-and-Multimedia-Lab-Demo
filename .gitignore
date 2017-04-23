@@ -5,3 +5,5 @@ application.linux64
 application.windows32
 application.windows64
 application.macosx
+COMP3419_Graphics_and_Multimedia_Lab_Demo/BG/*
+COMP3419_Graphics_and_Multimedia_Lab_Demo/composite/*

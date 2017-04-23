@@ -22,7 +22,7 @@ void setup() {
     size(1280, 720); //Just large enough to see what is happening
   frameRate(120); // Make your draw function run faster
   //create a Movie object. 
-  m = new Movie(this, sketchPath("star_trails.mov")); 
+  m = new Movie(this, sketchPath("videos/star_trails.mov")); 
   m.frameRate(120); // Play your movie faster
 
   framenumber = 0; 
@@ -40,7 +40,7 @@ void draw() {
 
   if( time >= duration ) { 
     if (phase == 1) {
-      m = new Movie(this, sketchPath("monkey.avi"));
+      m = new Movie(this, sketchPath("videos/monkey.avi"));
       m.frameRate(120); // Play your movie faster
       m.play();
       phase = 2;
