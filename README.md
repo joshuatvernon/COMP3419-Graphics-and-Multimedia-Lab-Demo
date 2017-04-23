@@ -33,7 +33,7 @@ This task is to perform the motion estimation with macroblock matching. The basi
 
 1. Iterate the video frames F<sub>i</sub> of size f<sub>x</sub> × f<sub>y</sub>; Define a grid block size K × K, K is preferred to be odd to make it easier to determine the central coordinate of each grid block. Each frame Fi results in fx f<sub>y</sub>/K2 grid blocks overall.
 2. For each grid block Bi at (x,y) in frame Fi, search for the grid block B′<sub>i+1</sub> at (x′,y′) in F</sub>i+1</sub> with the minimum sum squared distance (SSD) between Bi and B′<sub>i+1</sub>. SSD can be computed as the displacement from Bi to B′<sub>i+1</sub> can be represented as (x′ − x, y′ − y), a 2-D vector. To speed up, you can search the neighbour blocks only within a certain radius.
- 
+
 ![SSD Computation Formula][image-3]
 
 3. Save the displacement vectors of frame Fi in a 3D matrix of size fx/K × fy/K × 2 or two 2D
@@ -49,7 +49,7 @@ might be helpful.
 
 
 * Drawing arrow is not required. If you really want to draw arrows, the following code can be your starting point. void arrowdraw(int x1, int y1, int x2, int y2) { line(x1, y1, x2, y2); pushMatrix(); translate(x2, y2); float a = atan2(x1-x2, y2-y1); rotate(a); line(0, 0, -10, -10); line(0, 0, 10, -10); popMatrix(); }
- 
+
 
 * For more details of in-depth understanding of the video estimation algorithm, you may refer to http://web.stanford.edu/class/ee398a/handouts/lectures/EE398a_MotionEstimation_2012.pdf
 
@@ -60,4 +60,4 @@ might be helpful.
 
 [image-1]: https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/image-1.png "illustration-of-the-block-matching"
 [image-2]: https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/image-2.png "Example extracted motion vectors. Please note that in your lab submission, you do not need to draw arrows. Highlight the pixels with high magnitude would be sufficient. Do not forget to do step 5."
-[image-3]: https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/formula-1.svg "SSD Computation Formula"
+[image-3]: https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/formula-1.png "SSD Computation Formula"
