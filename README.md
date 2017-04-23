@@ -31,7 +31,7 @@ Figure 3.2: The illustration of block matching algorithm and the extracted optic
 
 This task is to perform the motion estimation with macroblock matching. The basic premise of motion estimation is that in most cases, consecutive video frames will be similar except for changes induced by objects moving within the frames. The basic idea of motion estimation is to define grids of block regions on two adjacent frames and find the displacement vector (a 2D Cartesian vector in 2D videos) between the matched blocks. To describe the meta-algorithm step by step:
 
-1. Iterate the video frames Fi of size fx × fy; Define a grid block size K × K, K is preferred to be odd to make it easier to determine the central coordinate of each grid block. Each frame Fi results in fx fy/K2 grid blocks overall.
+1. Iterate the video frames F<sub>i</sub> of size fx × fy; Define a grid block size K × K, K is preferred to be odd to make it easier to determine the central coordinate of each grid block. Each frame Fi results in fx fy/K2 grid blocks overall.
 2. For each grid block Bi at (x,y) in frame Fi, search for the grid block B′i+1 at (x′,y′) in Fi+1 with the minimum sum squared distance (SSD) between Bi and B′i+1. SSD can be computed as the displacement from Bi to B′i+1 can be represented as (x′ − x, y′ − y), a 2-D vector. To speed up, you can search the neighbour blocks only within a certain radius.
  
 **SSD(Bi,B′i+1) = ∑∑∑(Bi(bx,by,bc)−Bi+1(bx,by,bc))2 (3.1) bx by bc**
