@@ -9,110 +9,122 @@
 import processing.video.*; 
 Movie m;
 
-int framenumber = 1;
-int phase = 1; // The phase for precessing pipeline : 1, saving frames of background; 2. overwrite the background frames with 
-int bgctr = 1; // The total number of background frames
+// K must be odd
+int K = 5;
 
-// Colours
-int RED = 150;
-int BLUE = 115; 
-
-PImage bg;
-PImage monkeyframe;
+PImage frame;
 
 void setup() { 
-  size(1280, 720); // Just large enough to see what is happening
-  frameRate(120); // Make your draw function run faster
+  // Just large enough to see what is happening
+  size(1275, 750); 
   //create a Movie object. 
-  m = new Movie(this, sketchPath("videos/star_trails.mov")); 
-  m.frameRate(120); // Play your movie faster
-
-  framenumber = 0; 
-  fill(255, 255, 0); // Make the drawing colour yellow
-
+  m = new Movie(this, sketchPath("videos/iguana-vs-snakes.mp4")); 
   // Play the movie one time, no looping 
   m.play();
 } 
- 
-void draw() { 
-  // Clear the background with black colour
-  float time = m.time();
-  float duration = m.duration();
 
-  if (time >= duration) { 
-    if (phase == 1) {
-      m = new Movie(this, sketchPath("videos/monkey.avi"));
-      m.frameRate(120); // Play your movie faster
-      m.play();
-      phase = 2;
-      bgctr = framenumber;
-      framenumber = 1;
-    } else if (phase == 2) {
-      
-    } else if (phase == 3) {
-      exit(); // End the program when the second movie finishes
-    }
-  }
-
+void draw() {
   if (m.available()) {
     background(0, 0, 0);
-    m.read(); 
     
-    if (phase == 1) {
-      image(m, 0, 0);
-      m.save(sketchPath("") + "BG/"+nf(framenumber, 4) + ".tif"); // They say tiff is faster to save, but larger in disks 
-    } else if (phase == 2) {
-      monkeyframe = removeBackground(m);
-      bg = loadImage(sketchPath("") + "BG/"+nf(framenumber % bgctr, 4) + ".tif");
+    frame = m;
 
-      // Overwrite the background 
-      for (int x = 0; x < monkeyframe.width; x++) {
-        for (int y = 0; y < monkeyframe.height; y++) {
-          int mloc = x + y * monkeyframe.width;
-          color mc = monkeyframe.pixels[mloc];
-
-          if (mc != -1) {
-            // To control where you draw the monkey
-            // You can tweak the destination position of the monkey like
-            int bgx = constrain(x + 500, 0, bg.width);
-            int bgy = constrain(y + 60, 0, bg.height);
-            int bgloc = bgx + bgy * bg.width;
-            bg.pixels[bgloc] = mc;
+    // Loop through frame -- move search space
+    for (int fx = 0; fx < frame.width; fx += K) {
+      for (int fy = 0; fy < frame.height; fy += K) {
+        
+        int[] b_current = new int[K * K];
+        
+        // Loop through current block -- store each pixel's colour in b_current
+        int c_p_count = 0;
+        for (int cx = fx; cx < fx + K; cx++) {
+          for (int cy = fy; cy < fy + K; cy++) {
+            // find the colour of the pixel, store it in the array index
+            int loc = loc(cx, cy);
+            if (loc >= 0) {
+              // location is valid
+              b_current[c_p_count] = frame.pixels[loc];
+            }
+            c_p_count++;
           }
         }
+        // end loop through current block 
+        
+        int closest_block_x = 0;
+        int closest_block_y = 0;
+        float closest_block_closeness = 9999.99;
+        
+        // Loop through search space -- move block
+        for (int sx = fx - K; sx < fx + K; sx += K) {
+          for (int sy = fy - K; sy < fy + K; sy += K) {
+            
+            int[] b_prime = new int[K * K];
+            
+            // Loop through prime block -- store each pixel's colour in b_prime
+            int b_p_count = 0;
+            for (int bx = sx; bx < sx + K; bx++) {
+              for (int by = sy; by < sy + K; by++) {
+                // find the colour of the pixel, store it in the array index
+                int loc = loc(bx, by);
+                if (loc >= 0) {
+                  // location is valid
+                  b_prime[b_p_count] = frame.pixels[loc];
+                }
+                b_p_count++;
+              }
+            }
+            // end loop through prime block         
+            
+            // Call SSD
+            float b_prime_closeness = SSD(b_current, b_prime);
+            if (b_prime_closeness < closest_block_closeness) {
+              closest_block_closeness = b_prime_closeness;
+              closest_block_x = sx;
+              closest_block_y = sy;
+            }
+          }
+        }
+        // end loop through search space
+        
+        // draw dot on block with minimum difference from the current block
+        drawDot(closest_block_x, closest_block_y);
       }
-
-      bg.updatePixels();
-      image(bg, 0, 0);
-
-      // In the second phase, we just saveframe, since we would like to include the objects we drew
-      // I am drawing some thing at the same time.
-      saveFrame(sketchPath("") + "/composite/" + nf(framenumber, 4) + ".tif");
     }
-
-    System.out.printf("Phase: %d - Frame %d\n", phase, framenumber);
-    framenumber++; 
+    // end loop through frame
+    
   }
-
+  
+  frame.updatePixels();
+  
+  image(frame, 0, 0);
 } 
- 
+
 // Called every time a new frame is available to read 
 void movieEvent(Movie m) {
-  // pass
-} 
+  m.read();
+}
 
-PImage removeBackground(PImage frame) {
-  for (int x = 0; x < frame.width; x++) {
-    for (int y = 0; y < frame.height; y++) {
-      int loc = x + y * frame.width;
-      color c = frame.pixels[loc];
-      if (red(c) < RED && blue(c) > BLUE) { 
-        frame.pixels[loc] = -1; 
-      }
-    }
+// Check if coordinate is valid and if it is return it, else return -1
+int loc(int x, int y) {
+  if (x >= 0 && x < frame.width && y >= 0 && y < frame.height) {
+    // valid coordinate
+    return x + y * frame.width;
+  } else {
+    return -1;
   }
+}
 
-  frame.updatePixels();
+// draw a dot in the middle of the block
+void drawDot(int x, int y) {
+  int loc = loc(x + ((K-1)*2), y + ((K-1)*2));
+  frame.pixels[loc] = -1;
+}
 
-  return frame;
+// 
+float SSD(int[] b_current, int[] b_prime) {
+  int sum = 0;
+  for (int i = 0; i < b_current.length; i++) {
+    sum += pow(b_current[i] - b_prime[i], 2);
+  }
+  return sqrt(sum);
 }
