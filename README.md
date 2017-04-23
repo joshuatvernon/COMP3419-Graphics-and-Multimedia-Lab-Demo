@@ -35,7 +35,7 @@ This task is to perform the motion estimation with macroblock matching. The basi
 2. For each grid block Bi at (x,y) in frame Fi, search for the grid block B′<sub>i+1</sub> at (x′,y′) in F</sub>i+1</sub> with the minimum sum squared distance (SSD) between Bi and B′<sub>i+1</sub>. SSD can be computed as the displacement from Bi to B′<sub>i+1</sub> can be represented as (x′ − x, y′ − y), a 2-D vector. To speed up, you can search the neighbour blocks only within a certain radius.
 
 <div style="text-align:center">
-![SSD Computation Formula][image-3]
+    <img src="https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/formula-1.png"/>
 </div>
 
 3. Save the displacement vectors of frame Fi in a 3D matrix of size fx/K × fy/K × 2 or two 2D
