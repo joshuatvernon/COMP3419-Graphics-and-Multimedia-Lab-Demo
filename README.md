@@ -36,7 +36,7 @@ This task is to perform the motion estimation with macroblock matching. The basi
 
 ![SSD computational formula][image-3]
 
-3. Save the displacement vectors of frame F<sub>i</sub> in a 3D matrix of size fx/K × fy/K × 2 or two 2D matrices with size fx/K × fy/K each.
+3. Save the displacement vectors of frame F<sub>i</sub> in a 3D matrix of size f<sub>x</sub>/K × f<sub>y</sub>/K × 2 or two 2D matrices with size f<sub>x</sub>/K × f<sub>y</sub>/K each.
 4. Visualise the displacement fields with a 2D image with the same size as frame F<sub>i</sub>. The same magnitude value is assigned to all the pixels within the region covered by a single grid block. Alternatively you can draw arrows to represent the extracted displacement fields.
 5. Visualise the boundary of the object with large displacement. Hint : the dilation or erosion might be helpful.
 6. Repeat step 1-5 for all frames
