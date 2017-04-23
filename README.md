@@ -31,14 +31,14 @@ Figure 3.2: The illustration of block matching algorithm and the extracted optic
 
 This task is to perform the motion estimation with macroblock matching. The basic premise of motion estimation is that in most cases, consecutive video frames will be similar except for changes induced by objects moving within the frames. The basic idea of motion estimation is to define grids of block regions on two adjacent frames and find the displacement vector (a 2D Cartesian vector in 2D videos) between the matched blocks. To describe the meta-algorithm step by step:
 
-1. Iterate the video frames Fi of size fx × fy; Define a grid block size K × K, K is preferred to be odd to make it easier to determine the central coordinate of each grid block. Each frame Fi results in fx fy/K2 grid blocks overall.
-2. For each grid block Bi at (x,y) in frame Fi, search for the grid block B′i+1 at (x′,y′) in Fi+1 with the minimum sum squared distance (SSD) between Bi and B′i+1. SSD can be computed as the displacement from Bi to B′i+1 can be represented as (x′ − x, y′ − y), a 2-D vector. To speed up, you can search the neighbour blocks only within a certain radius.
+1. Iterate the video frames F<sub>i</sub> of size f<sub>x</sub> × f<sub>y</sub>; Define a grid block size K × K, K is preferred to be odd to make it easier to determine the central coordinate of each grid block. Each frame Fi results in fx f<sub>y</sub>/K2 grid blocks overall.
+2. For each grid block Bi at (x,y) in frame Fi, search for the grid block B′<sub>i+1</sub> at (x′,y′) in F</sub>i+1</sub> with the minimum sum squared distance (SSD) between Bi and B′<sub>i+1</sub>. SSD can be computed as the displacement from Bi to B′<sub>i+1</sub> can be represented as (x′ − x, y′ − y), a 2-D vector. To speed up, you can search the neighbour blocks only within a certain radius.
  
-**SSD(Bi,B′i+1) = ∑∑∑(Bi(bx,by,bc)−Bi+1(bx,by,bc))2 (3.1) bx by bc**
+![SSD Computation Formula][formula-1]
 
 3. Save the displacement vectors of frame Fi in a 3D matrix of size fx/K × fy/K × 2 or two 2D
 matrices with size fx/K × fy/K each.
-4. Visualise the displacement fields with a 2D image with the same size as frame Fi. The same
+4. Visualise the displacement fields with a 2D image with the same size as frame F<sub>i</sub>. The same
 magnitude value is assigned to all the pixels within the region covered by a single grid block.
 Alternatively you can draw arrows to represent the extracted displacement fields.
 5. Visualise the boundary of the object with large displacement. Hint : the dilation or erosion
@@ -60,3 +60,4 @@ might be helpful.
 
 [image-1]: https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/image-1.png "illustration-of-the-block-matching"
 [image-2]: https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/image-2.png "Example extracted motion vectors. Please note that in your lab submission, you do not need to draw arrows. Highlight the pixels with high magnitude would be sufficient. Do not forget to do step 5."
+[formula-1]: https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/formula-1.png "SSD Computation Formula"
