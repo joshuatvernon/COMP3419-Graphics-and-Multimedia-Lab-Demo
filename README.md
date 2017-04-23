@@ -34,7 +34,7 @@ This task is to perform the motion estimation with macroblock matching. The basi
 1. Iterate the video frames F<sub>i</sub> of size f<sub>x</sub> × f<sub>y</sub>; Define a grid block size K × K, K is preferred to be odd to make it easier to determine the central coordinate of each grid block. Each frame Fi results in fx f<sub>y</sub>/K2 grid blocks overall.
 2. For each grid block Bi at (x,y) in frame Fi, search for the grid block B′<sub>i+1</sub> at (x′,y′) in F</sub>i+1</sub> with the minimum sum squared distance (SSD) between Bi and B′<sub>i+1</sub>. SSD can be computed as the displacement from Bi to B′<sub>i+1</sub> can be represented as (x′ − x, y′ − y), a 2-D vector. To speed up, you can search the neighbour blocks only within a certain radius.
 
-<div style="text-align:center">
+<div style="margin: 0 auto; display: block;">
     <img src="https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/formula-1.png"/>
 </div>
 
