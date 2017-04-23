@@ -60,4 +60,4 @@ might be helpful.
 
 [image-1]: https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/image-1.png "illustration-of-the-block-matching"
 [image-2]: https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/image-2.png "Example extracted motion vectors. Please note that in your lab submission, you do not need to draw arrows. Highlight the pixels with high magnitude would be sufficient. Do not forget to do step 5."
-[formula-1]: https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/formula-1.png "SSD Computation Formula"
+[formula-1]: https://github.com/joshuatvernon/COMP3419-Graphics-and-Multimedia-Lab-Demo/blob/master/images/formula-1.svg "SSD Computation Formula"
