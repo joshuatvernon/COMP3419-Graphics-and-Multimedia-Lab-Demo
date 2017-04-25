@@ -39,9 +39,9 @@ void draw() {
   if (phase == 1 && time >= duration) {
     m.jump(0);
     phase = 2;
-    m_frames = framenumber;
+    m_frames = framenumber - 1;
     framenumber = 0;
-  } else if (phase == 2 && framenumber == m_frames) {
+  } else if (phase == 2 && framenumber >= m_frames) {
     exit();
   }
   
