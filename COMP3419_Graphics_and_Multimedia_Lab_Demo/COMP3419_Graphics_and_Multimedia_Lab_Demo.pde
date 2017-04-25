@@ -9,136 +9,147 @@
 import processing.video.*; 
 Movie m;
 
-// K must be odd
-int K = 20;
+int framenumber = 0;
 
-PImage frame;
+// K must be odd
+int K = 9;
+
+float lower_threshold = 100;
+float threshold = 700;
+
+PImage current_frame;
 PImage previous_frame = null;
 
 void setup() { 
   // Just large enough to see what is happening
-  //size(1275, 750);
-  size(950, 565);
+  size(720, 576);
   // fill colour
   fill(252, 30, 69);
   stroke(252, 30, 69);
   //create a Movie object. 
-  m = new Movie(this, sketchPath("videos/iguana-vs-snakes.mp4")); 
+  m = new Movie(this, sketchPath("videos/monkey.avi")); 
   // slow down framerate
-  m.frameRate(25);
+  m.frameRate(10);
   // Play the movie one time, no looping
   m.play();
 } 
 
 void draw() {
-  frame = m;
+  if (m.available()) {
+    current_frame = m;
   
-  image(frame, 0, 0);
-
-  if (previous_frame != null) {
-    // Loop through frame -- move search space
-    for (int fx = 0; fx < frame.width; fx += K) {
-      for (int fy = 0; fy < frame.height; fy += K) {
-        
-        int[] b_current = new int[K * K];
-        
-        // Loop through current block -- store each pixel's colour in b_current
-        int c_p_count = 0;
-        for (int cx = fx; cx < fx + K; cx++) {
-          for (int cy = fy; cy < fy + K; cy++) {
-            // find the colour of the pixel, store it in the array index
-            int loc = loc(cx, cy);
-            if (loc >= 0) {
-              // location is valid
-              b_current[c_p_count] = previous_frame.pixels[loc];
+    image(current_frame, 0, 0);
+  
+    if (previous_frame != null) {
+      // Loop through current_frame -- move search space
+      for (int fx = 0; fx < current_frame.width; fx += K) {
+        for (int fy = 0; fy < current_frame.height; fy += K) {
+          
+          color[] b_current = new color[K * K];
+          
+          // Loop through current block -- store each pixel's colour in b_current
+          int c_p_count = 0;
+          for (int cx = fx; cx < fx + K; cx++) {
+            for (int cy = fy; cy < fy + K; cy++) {
+              // find the colour of the pixel, store it in the array index
+              int loc = loc(cx, cy);
+              if (loc >= 0) {
+                // location is valid
+                color c = previous_frame.pixels[loc];
+                b_current[c_p_count] = c;
+              }
+              c_p_count++;
             }
-            c_p_count++;
-          }
-        }
-        // end loop through current block 
-        
-        int closest_block_x = 0;
-        int closest_block_y = 0;
-        float closest_block_closeness = 9999.99;
-        
-        // Loop through search space -- move block
-        for (int sx = fx - K; sx < fx + K; sx += K) {
-          for (int sy = fy - K; sy < fy + K; sy += K) {
-            
-            int[] b_prime = new int[K * K];
-            
-            // Loop through prime block -- store each pixel's colour in b_prime
-            int b_p_count = 0;
-            for (int bx = sx; bx < sx + K; bx++) {
-              for (int by = sy; by < sy + K; by++) {
-                // find the colour of the pixel, store it in the array index
-                int loc = loc(bx, by);
-                if (loc >= 0) {
-                  // location is valid
-                  b_prime[b_p_count] = frame.pixels[loc];
+          } // end loop through current block 
+          
+          int min_ssd_x = 0;
+          int min_ssd_y = 0;
+          float min_ssd = 9999.99;
+          
+          // Loop through search space -- move block
+          for (int sx = fx - (K * 2); sx < fx + (K * 2); sx += K) {
+            for (int sy = fy - (K * 2); sy < fy + (K * 2); sy += K) {
+              
+              color[] b_prime = new color[K * K];
+              
+              // Loop through prime block -- store each pixel's colour in b_prime
+              int b_p_count = 0;
+              for (int bx = sx; bx < sx + K; bx++) {
+                for (int by = sy; by < sy + K; by++) {
+                  // find the colour of the pixel, store it in the array index
+                  int loc = loc(bx, by);
+                  if (loc >= 0) {
+                    // location is valid
+                    color c = current_frame.pixels[loc];
+                    b_prime[b_p_count] = c;
+                  }
+                  b_p_count++;
                 }
-                b_p_count++;
+              } // end loop through prime block
+              
+              // Call SSD
+              float b_prime_ssd = SSD(b_current, b_prime);
+              
+              //
+              if (b_prime_ssd < min_ssd) {
+                min_ssd = b_prime_ssd;
+                min_ssd_x = sx;
+                min_ssd_y = sy;
               }
             }
-            // end loop through prime block         
-            
-            // Call SSD
-            float b_prime_closeness = SSD(b_current, b_prime);
-            
-            //
-            if (b_prime_closeness < closest_block_closeness) {
-              closest_block_closeness = b_prime_closeness;
-              closest_block_x = sx;
-              closest_block_y = sy;
-            }
+          } // end loop through search space
+          
+          // draw dot on block with minimum difference from the current block
+          if (min_ssd_x != fx && min_ssd_y != fy) {
+            drawDot(min_ssd_x, min_ssd_y);
           }
         }
-        // end loop through search space
-        
-        // draw dot on block with minimum difference from the current block
-        drawDot(closest_block_x, closest_block_y);
-      }
+      } // end loop through current_frame
     }
-    // end loop through frame
-  }
+      
+    current_frame.updatePixels();
     
-  frame.updatePixels();
-  
-  previous_frame = frame;
-} 
+    current_frame.save(sketchPath("") + "BG/"+nf(framenumber, 4) + ".tif");
+    framenumber++;
+    
+    previous_frame = current_frame;
+  }
+}
+
 
 // Called every time a new frame is available to read 
 void movieEvent(Movie m) {
   m.read();
 }
 
+
 // Check if coordinate is valid and if it is return it, else return -1
 int loc(int x, int y) {
-  if (x >= 0 && x < frame.width && y >= 0 && y < frame.height) {
+  if (x >= 0 && x < current_frame.width && y >= 0 && y < current_frame.height) {
     // valid coordinate
-    return x + (y * frame.width);
+    return x + (y * current_frame.width);
   } else {
     return -1;
   }
 }
 
+
 // draw a dot in the middle of the block
 void drawDot(int x, int y) {
   int loc = loc(x + ((K-1)/2), y + ((K-1)/2));
   if (loc >= 0) {
-    //frame.pixels[loc] = -1;
     ellipse(x + ((K-1)/2), y + ((K-1)/2), 2, 2);
   }
 }
 
+
 // 
-float SSD(int[] b_current, int[] b_prime) {
-  int sum = 0;
-  for (int p = 0; p < b_current.length; p++) {
-    System.out.println(b_current[p]);
-  }
+float SSD(color[] b_current, color[] b_prime) {
+  float sum = 0;
   for (int i = 0; i < b_current.length; i++) {
-    sum += pow((b_current[i] - b_prime[i]), 2);
+    sum += pow((red(b_current[i]) - red(b_prime[i])), 2);
+    sum += pow((green(b_current[i]) - green(b_prime[i])), 2);
+    sum += pow((blue(b_current[i]) - blue(b_prime[i])), 2);
   }
   return sqrt(sum);
 }
