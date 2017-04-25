@@ -9,16 +9,18 @@
 import processing.video.*; 
 Movie m;
 
-int framenumber = 0;
-
 // K must be odd
 int K = 9;
+int radius = 3;
 
-float lower_threshold = 100;
-float threshold = 700;
+float threshold = 500;
 
 PImage current_frame;
-PImage previous_frame = null;
+PImage next_frame;
+
+int phase = 1;
+int framenumber = 0;
+int m_frames = 0;
 
 void setup() { 
   // Just large enough to see what is happening
@@ -29,97 +31,119 @@ void setup() {
   //create a Movie object. 
   m = new Movie(this, sketchPath("videos/monkey.avi")); 
   // slow down framerate
-  m.frameRate(10);
+  m.frameRate(25);
   // Play the movie one time, no looping
   m.play();
 } 
 
 void draw() {
-  if (m.available()) {
-    current_frame = m;
+  float time = m.time();
+  float duration = m.duration();
   
-    image(current_frame, 0, 0);
-  
-    if (previous_frame != null) {
-      // Loop through current_frame -- move search space
-      for (int fx = 0; fx < current_frame.width; fx += K) {
-        for (int fy = 0; fy < current_frame.height; fy += K) {
-          
-          color[] b_current = new color[K * K];
-          
-          // Loop through current block -- store each pixel's colour in b_current
-          int c_p_count = 0;
-          for (int cx = fx; cx < fx + K; cx++) {
-            for (int cy = fy; cy < fy + K; cy++) {
-              // find the colour of the pixel, store it in the array index
-              int loc = loc(cx, cy);
-              if (loc >= 0) {
-                // location is valid
-                color c = previous_frame.pixels[loc];
-                b_current[c_p_count] = c;
-              }
-              c_p_count++;
-            }
-          } // end loop through current block 
-          
-          int min_ssd_x = 0;
-          int min_ssd_y = 0;
-          float min_ssd = 9999.99;
-          
-          // Loop through search space -- move block
-          for (int sx = fx - (K * 2); sx < fx + (K * 2); sx += K) {
-            for (int sy = fy - (K * 2); sy < fy + (K * 2); sy += K) {
-              
-              color[] b_prime = new color[K * K];
-              
-              // Loop through prime block -- store each pixel's colour in b_prime
-              int b_p_count = 0;
-              for (int bx = sx; bx < sx + K; bx++) {
-                for (int by = sy; by < sy + K; by++) {
-                  // find the colour of the pixel, store it in the array index
-                  int loc = loc(bx, by);
-                  if (loc >= 0) {
-                    // location is valid
-                    color c = current_frame.pixels[loc];
-                    b_prime[b_p_count] = c;
-                  }
-                  b_p_count++;
-                }
-              } // end loop through prime block
-              
-              // Call SSD
-              float b_prime_ssd = SSD(b_current, b_prime);
-              
-              //
-              if (b_prime_ssd < min_ssd) {
-                min_ssd = b_prime_ssd;
-                min_ssd_x = sx;
-                min_ssd_y = sy;
-              }
-            }
-          } // end loop through search space
-          
-          // draw dot on block with minimum difference from the current block
-          if (min_ssd_x != fx && min_ssd_y != fy) {
-            drawDot(min_ssd_x, min_ssd_y);
-          }
-        }
-      } // end loop through current_frame
+  if (time >= duration) {
+    if (phase == 1) {
+      m = new Movie(this, sketchPath("videos/monkey.avi"));
+      m.frameRate(25); // Play your movie faster
+      m.play();
+      phase = 2;
+      m_frames = framenumber;
+      framenumber = 0;
+    } else if (phase == 2) {
+      exit();
     }
-      
-    current_frame.updatePixels();
-    
-    current_frame.save(sketchPath("") + "BG/"+nf(framenumber, 4) + ".tif");
-    framenumber++;
-    
-    previous_frame = current_frame;
   }
+  
+  if (m.available()) {
+    
+    if (phase == 1) {
+      m.read();
+      m.save(sketchPath("") + "BG/" + nf(framenumber, 4) + ".tif");
+      image(m, 0, 0);
+    } else if (phase == 2) {
+      m.read();
+      if (framenumber <= m_frames) {
+        current_frame = loadImage(sketchPath("") + "BG/"+nf(framenumber, 4) + ".tif");
+        next_frame = loadImage(sketchPath("") + "BG/"+nf(framenumber + 1, 4) + ".tif");
+        
+        image(current_frame, 0, 0);
+        
+        // Loop through current_frame -- move search space
+        for (int fx = 0; fx < current_frame.width; fx += K) {
+          for (int fy = 0; fy < current_frame.height; fy += K) {
+            
+            // get the colours in the current block
+            color[] b_current = get_block(current_frame, fx, fy);
+            
+            int min_ssd_x = 0;
+            int min_ssd_y = 0;
+            float min_ssd = 999999.99;
+            
+            // Loop through search space -- move block
+            for (int sx = fx - (K * radius); sx < fx + (K * radius); sx += K) {
+              for (int sy = fy - (K * radius); sy < fy + (K * radius); sy += K) {
+                
+                // get the colours in the b_prime block
+                color[] b_prime = get_block(next_frame, sx, sy);
+                
+                // Call SSD
+                float b_prime_ssd = SSD(b_current, b_prime);
+                
+                //
+                if (b_prime_ssd < min_ssd) {
+                  min_ssd = b_prime_ssd;
+                  min_ssd_x = sx;
+                  min_ssd_y = sy;
+                }
+              }
+            } // end loop through search space
+            
+            // draw dot on block with minimum difference from the current block
+            if (min_ssd_x != fx && min_ssd_y != fy && min_ssd > threshold) {
+              drawDot(current_frame, min_ssd_x, min_ssd_y);
+            }
+          }
+        } // end loop through current_frame
+        
+        current_frame.updatePixels();
+        
+        //current_frame.save(sketchPath("") + "composite/"+nf(framenumber, 4) + ".tif");
+        saveFrame(sketchPath("") + "composite/"+nf(framenumber, 4) + ".tif");
+      } else {
+        phase = 2; 
+      }
+    } // end if (m.available())
+    
+    framenumber++;
+  }
+}
+
+
+// Loop through block and return an array of the pixel's colors
+color[] get_block(PImage frame, int x, int y) {
+  color[] block = new color[K * K];
+  
+  // Loop through block
+  int idx = 0;
+  for (int bx = x; bx < x + K; bx++) {
+    for (int by = y; by < y + K; by++) {
+      // find the colour of the pixel, store it in the array index
+      int loc = loc(bx, by);
+      if (loc >= 0) {
+        // location is valid
+        color c = frame.pixels[loc];
+        block[idx] = c;
+      }
+      idx++;
+    }
+  } // end loop through block
+  
+  return block;
 }
 
 
 // Called every time a new frame is available to read 
 void movieEvent(Movie m) {
-  m.read();
+  //m.read();
 }
 
 
@@ -135,10 +159,11 @@ int loc(int x, int y) {
 
 
 // draw a dot in the middle of the block
-void drawDot(int x, int y) {
+void drawDot(PImage frame, int x, int y) {
   int loc = loc(x + ((K-1)/2), y + ((K-1)/2));
   if (loc >= 0) {
-    ellipse(x + ((K-1)/2), y + ((K-1)/2), 2, 2);
+    //frame.pixels[loc] = -1;
+    ellipse(x + ((K-1)/2), y + ((K-1)/2),2,2);
   }
 }
 
